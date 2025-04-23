@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.proj16'
+version = '1.0'
+
+application {
+    mainClass = 'com.gp11.Main'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Java Drivers for MongoDB
+    implementation (platform("org.mongodb:mongodb-driver-bom:5.4.0"))
+    implementation 'org.mongodb:mongodb-driver-sync'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(23)
+    }
+}
