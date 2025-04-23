@@ -7,7 +7,7 @@ group = 'com.proj16'
 version = '1.0'
 
 application {
-    mainClass = 'com.gp11.Main'
+    mainClass = 'com.gp11.flightapp.Main'
 }
 
 repositories {
