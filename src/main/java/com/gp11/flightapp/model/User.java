@@ -1,4 +1,5 @@
-package com.gp11.flightapp;
+package com.gp11.flightapp.model;
+
 
 public class User {
     private String id;

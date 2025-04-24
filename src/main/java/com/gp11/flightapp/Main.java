@@ -1,12 +1,17 @@
 package com.gp11.flightapp;
 
+import com.gp11.flightapp.dao.UserDAO;
+import com.gp11.flightapp.model.User;
 import com.gp11.flightapp.utils.MongoUtil;
-import com.mongodb.client.MongoDatabase;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Did you see that ludicrous display last night?");
-        MongoDatabase db = MongoUtil.getDatabase();
-        System.out.println("Connected to database: " + db.getName());
+        UserDAO userDAO = new UserDAO(MongoUtil.getDatabase());
+
+        for (User u : userDAO.getAll()) {
+            System.out.println(u.toString());
+        }
+
+        MongoUtil.close();
     }
 }
