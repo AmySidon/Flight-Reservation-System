@@ -1,62 +1,7 @@
-// UserDAO.java : Converts between objects of User class and Documents in the database
-
 package com.gp11.flightapp.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.bson.Document;
-import org.bson.types.ObjectId;
-
 import com.gp11.flightapp.model.User;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import static com.mongodb.client.model.Filters.eq;
 
-public class UserDAO implements GenericDAO<User> {
-    private final MongoCollection<Document> userCollection;
-
-    public UserDAO(MongoDatabase db) {
-        this.userCollection = db.getCollection("Users");
-    }
-    @Override
-    public void create(User user) {
-        Document doc = new Document("name", user.getName())
-            .append("email", user.getEmail());
-        userCollection.insertOne(doc);
-    }
-    @Override
-    public User read(String id) {
-        Document doc = userCollection.find(eq("_id", new ObjectId(id))).first();
-        if (doc == null) return null;
-        return new User(
-            doc.getObjectId("_id").toHexString(),
-            doc.getString("name"),
-            doc.getString("email")
-        );
-    }
-    @Override
-    public List<User> getAll() {
-        List<User> users = new ArrayList<>();
-        for (Document doc : userCollection.find()) {
-            users.add(new User(
-                doc.getObjectId("_id").toHexString(),
-                doc.getString("name"),
-                doc.getString("email")
-            ));
-        }
-        return users;
-    }
-    @Override
-    public void update(User user) {
-        Document updatedDoc = new Document("name", user.getName())
-            .append("email", user.getEmail());
-        userCollection.updateOne(eq("_id", new ObjectId(user.getId())), new Document("$set", updatedDoc));
-    }
-    @Override
-    public void delete(String id) {
-        userCollection.deleteOne(eq("_id", new ObjectId(id)));
-    }
-
-    
+public interface UserDAO extends GenericDAO<User> {
+    public User readByEmail(String email);
 }
