@@ -8,6 +8,7 @@ import java.util.List;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
+import com.gp11.flightapp.exceptions.DuplicateEmailException;
 import com.gp11.flightapp.model.User;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -20,7 +21,11 @@ public class UserDAOimpl implements UserDAO {
         this.userCollection = db.getCollection("Users");
     }
     @Override
-    public void create(User user) {
+    public void create(User user) throws DuplicateEmailException {
+        String email = user.getEmail();
+        if (readByEmail(email) != null) {
+            throw new DuplicateEmailException(email);
+        }
         Document doc = new Document("name", user.getName())
             .append("email", user.getEmail());
         userCollection.insertOne(doc);
@@ -54,7 +59,11 @@ public class UserDAOimpl implements UserDAO {
         return users;
     }
     @Override
-    public void update(User user) {
+    public void update(User user) throws DuplicateEmailException {
+        User existing = readByEmail(user.getEmail());
+        if (existing != null && !existing.getId().equals(user.getId())) {
+            throw new DuplicateEmailException(user.getEmail());
+        }
         Document updatedDoc = new Document("name", user.getName())
             .append("email", user.getEmail());
         userCollection.updateOne(eq("_id", new ObjectId(user.getId())), new Document("$set", updatedDoc));

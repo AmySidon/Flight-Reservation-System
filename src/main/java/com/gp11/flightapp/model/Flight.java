@@ -16,6 +16,12 @@ public class Flight {
         this.date = date;
     }
 
+    public Flight(String departureAirport, String arrivalAirport, LocalDate date) {
+        this.id = null;
+        this.departureAirport = departureAirport;
+        this.arrivalAirport = arrivalAirport;
+        this.date = date;
+    }
     public void setId(String id) {
         this.id = id;
     }
