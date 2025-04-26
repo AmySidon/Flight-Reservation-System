@@ -73,16 +73,21 @@ public class BookingService {
     public Flight readFlight(String id) {
         return flightDAO.read(id);
     }
+    //Overloads the previous method to take two dates, destination and origin airports. Returns
+    //All flight objects that match.
+    public List<Flight> searchFlights(LocalDate startDate, LocalDate endDate, String origin, String destination) {
+        return flightDAO.readByDateAndAirport(startDate, endDate, origin, destination);
+    }
     // Takes a start date and end date and returns a list of all flights between the two.
-    public List<Flight> searchFlightByDate(LocalDate startDate, LocalDate endDate) {
+    public List<Flight> searchFlightsByDate(LocalDate startDate, LocalDate endDate) {
         return flightDAO.readByDateRange(startDate, endDate);
     }
     // Takes the origin airport as a string, and returns all flights leaving from there.
-    public List<Flight> searchFlightByOrigin(String origin) {
+    public List<Flight> searchFlightsByOrigin(String origin) {
         return flightDAO.readByOrigin(origin);
     }
     // Takes the destination airport as a string, and returns all flights arriving there.
-    public List<Flight> searchFlightByDestination(String destination) {
+    public List<Flight> searchFlightsByDestination(String destination) {
         return flightDAO.readByDestination(destination);
     }
     // Returns all flights in database in the form of a list of Flight objects.

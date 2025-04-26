@@ -1,16 +1,12 @@
 plugins {
     id 'java'
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 group = 'com.proj16'
 version = '1.0'
 
-javafx {
-    version = "24.0.1"
-    modules = [ 'javafx.controls', 'javafx.fxml' ]
-}
+
 
 application {
     mainClass = 'com.gp11.flightapp.Main'
@@ -24,8 +20,6 @@ dependencies {
     // Java Drivers for MongoDB
     implementation (platform("org.mongodb:mongodb-driver-bom:5.4.0"))
     implementation 'org.mongodb:mongodb-driver-sync'
-    implementation 'org.openjfx:javafx-controls:17'
-    implementation 'org.openjfx:javafx-fxml:17'
 }
 
 java {

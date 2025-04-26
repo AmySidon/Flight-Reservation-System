@@ -48,6 +48,6 @@ public class Flight {
     }
     @Override
     public String toString() {
-        return "Departed from " + departureAirport + ", arriving at " + arrivalAirport + " on " + date;
+        return "Departing from " + departureAirport + ", arriving at " + arrivalAirport + " on " + date;
     }
 }

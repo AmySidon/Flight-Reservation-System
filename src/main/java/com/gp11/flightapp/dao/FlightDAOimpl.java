@@ -66,7 +66,7 @@ public class FlightDAOimpl implements FlightDAO {
                 doc.getDate("date").toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
             ));
         }
-        return flights; //placeholder
+        return flights;
     }
     @Override
     public List<Flight> readByOrigin(String origin) {
@@ -86,6 +86,27 @@ public class FlightDAOimpl implements FlightDAO {
     public List<Flight> readByDestination(String destination) {
         List<Flight> flights = new ArrayList<>();
         FindIterable<Document> docs = flightCollection.find(eq("destination", destination));
+        for (Document doc : docs) {
+            flights.add(new Flight(
+                doc.getObjectId("_id").toHexString(),
+                doc.getString("origin"),
+                doc.getString("destination"),
+                doc.getDate("date").toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+            ));
+        }
+        return flights;
+    }
+    @Override
+    public List<Flight> readByDateAndAirport(LocalDate startDate, LocalDate endDate, String origin, String destination){
+        List<Flight> flights = new ArrayList<>();
+        FindIterable<Document> docs = flightCollection.find(
+            and(
+                gte("date", Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant())),
+                lte("date", Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant())),
+                eq("destination", destination),
+                eq("origin", origin)
+            )
+        );
         for (Document doc : docs) {
             flights.add(new Flight(
                 doc.getObjectId("_id").toHexString(),
