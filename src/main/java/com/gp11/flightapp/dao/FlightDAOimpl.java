@@ -100,7 +100,7 @@ public class FlightDAOimpl implements FlightDAO {
     public List<Flight> getAll(){
         List<Flight> flights = new ArrayList<>();
         for (Document doc : flightCollection.find()) {
-            Date flightDate = doc.getDate("origin");
+            Date flightDate = doc.getDate("date");
             LocalDate localFlightDate = flightDate.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate();
