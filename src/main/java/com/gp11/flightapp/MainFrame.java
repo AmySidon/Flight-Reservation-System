@@ -1,23 +1,24 @@
 package com.gp11.flightapp;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 import com.gp11.flightapp.dao.BookingService;
 import com.gp11.flightapp.model.User;
+import com.gp11.flightapp.utils.MongoUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
 public class MainFrame extends JFrame {
     private BookingService bookingService;
+    private User currentUser;
+    private JLabel userLabel;
+
     public MainFrame() {
         //Connect to MongoDB
-        MongoClient mongoClient = MongoClients.create("mongodb+srv://user_01:group16@g16-project.rl4rjyj.mongodb.net/?retryWrites=true&w=majority&appName=g16-project");
-        MongoDatabase database = mongoClient.getDatabase("flight_reservation_db"); // <-- We'll double check the database name soon
-        bookingService = new BookingService(database);
+        bookingService = new BookingService(MongoUtil.getDatabase());
+
+        // Start logged out
+        currentUser = null;
 
         //Set up the main frame
         setTitle("Flight Reservation System");
@@ -25,19 +26,66 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // center the window
 
+        // Creating menu bar
+        JMenuBar menuBar = new JMenuBar();
+
+        // Create user menu
+        JMenu userMenu = new JMenu("User");
+        menuBar.add(userMenu);
+
+        // Add buttons to user menu
+        JMenuItem logOutItem = new JMenuItem("Log Out");
+        JMenuItem editUserItem = new JMenuItem("Edit Info");
+        userMenu.add(logOutItem);
+        userMenu.add(editUserItem);
+
+        setJMenuBar(menuBar);
+
+        // Initialize the userLabel
+        userLabel = new JLabel("Not logged in");
+        userLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        userLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+
+        // Dispaly userLabel
+        setLayout(new BorderLayout());
+        add(userLabel, BorderLayout.NORTH);
+
         //Panel to hold the buttons
+        
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(3, 2, 10, 10)); // rows, columns, hgap, vgap
 
         // Buttons
         JButton addUserButton = new JButton("Add User");
         JButton addFlightButton = new JButton("Add Flight");
-        JButton bookReservationButton = new JButton("Book Reservation");
+        JButton loginButton = new JButton("Log in");
         JButton viewFlightsButton = new JButton("View Flights");
         JButton viewReservationsButton = new JButton("View Reservations");
         JButton searchFlightsButton = new JButton("Search Flights");
 
         // Add action listeners to buttons (empty for now)
+        logOutItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (currentUser == null) {
+                    JOptionPane.showMessageDialog(MainFrame.this, "Already logged out!");
+                } else {
+                    logOut();
+                }
+
+            }
+        });
+
+        editUserItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (currentUser == null) {
+                    JOptionPane.showMessageDialog(MainFrame.this, "Must be logged in to edit info!");
+                } else {
+                    editUser();
+                }
+            }
+        });
+
+
         addUserButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -69,9 +117,28 @@ public class MainFrame extends JFrame {
             }
         });
 
-        bookReservationButton.addActionListener(new ActionListener() {
+        loginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(MainFrame.this, "Book Reservation button clicked!");
+                try {
+                    String email= JOptionPane.showInputDialog(MainFrame.this, "Enter your email to log in:");
+
+                    if (email != null && !email.trim().isEmpty()) {
+                        User user = bookingService.searchUserEmail(email.trim());
+                        if (user != null) {
+                            currentUser = user;
+                            userLabel.setText("Logged in as " + currentUser.getName());
+                            JOptionPane.showMessageDialog(MainFrame.this, "Logged in successfully! Welcome back, " + currentUser.getName() + "!");
+                            System.out.println("Logged in as " + currentUser.getName());
+                        } else {
+                            JOptionPane.showMessageDialog(MainFrame.this, "No user found with that email.");
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(MainFrame.this, "Invalid email input.");
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(MainFrame.this, "Error: " + ex.getMessage());
+                    System.out.println("Login error: " + ex.getMessage());
+                }
             }
         });
         viewFlightsButton.addActionListener(new ActionListener() {
@@ -118,8 +185,8 @@ public class MainFrame extends JFrame {
 
         // Add buttons to the panel
         panel.add(addUserButton);
+        panel.add(loginButton);
         panel.add(addFlightButton);
-        panel.add(bookReservationButton);
         panel.add(viewFlightsButton);
         panel.add(viewReservationsButton);
         panel.add(searchFlightsButton);
@@ -128,6 +195,50 @@ public class MainFrame extends JFrame {
         add(panel);
 
         setVisible(true);
+    }
+
+    private void logOut() {
+        currentUser = null;
+        userLabel.setText("Not logged in");
+        JOptionPane.showMessageDialog(this, "You have logged out.");
+    }
+
+    private void editUser() {
+        if (currentUser == null) {
+            JOptionPane.showMessageDialog(this, "Must be logged in to edit info!");
+            return;
+        }
+
+        JTextField nameField = new JTextField(currentUser.getName());
+        JTextField emailField = new JTextField(currentUser.getEmail());
+
+        JPanel panel = new JPanel(new GridLayout(2, 2));
+        panel.add(new JLabel("Name:"));
+        panel.add(nameField);
+        panel.add(new JLabel("Email:"));
+        panel.add(emailField);
+
+        int option = JOptionPane.showConfirmDialog(this, panel, "Edit User", JOptionPane.OK_CANCEL_OPTION);
+
+        if(option == JOptionPane.OK_OPTION) {
+            String newName = nameField.getText().trim();
+            String newEmail = emailField.getText().trim();
+
+            if (newName.isEmpty() || newEmail.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Name and email cannot be empty.");
+                return;
+            }
+
+            try {
+                User newUser = new User(currentUser.getId(), newName, newEmail);
+                bookingService.updateUser(newUser);
+                currentUser = newUser;
+                userLabel.setText("Logged in as: " + currentUser.getName());
+                JOptionPane.showMessageDialog(this, "User updated successfully.");
+            } catch(Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error " + ex.getMessage());
+            }
+        }
     }
 
     public static void main(String[] args) {
