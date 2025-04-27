@@ -9,7 +9,7 @@ version = '1.0'
 
 
 application {
-    mainClass = 'com.gp11.flightapp.Main'
+    mainClass = 'com.gp11.flightapp.MainFrame'
 }
 
 repositories {
