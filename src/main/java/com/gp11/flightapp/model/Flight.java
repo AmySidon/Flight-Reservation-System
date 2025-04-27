@@ -26,9 +26,15 @@ public class Flight {
         this.id = id;
     }
     public void setDepartureAirport(String departureAirport) {
+        if(departureAirport == null || departureAirport.trim().isEmpty()) {
+            throw new IllegalArgumentException("Airport string cannot by empty or null");
+        }
         this.departureAirport = departureAirport;
     }
     public void setArrivalAirport(String arrivalAirport) {
+        if(arrivalAirport == null || arrivalAirport.trim().isEmpty()) {
+            throw new IllegalArgumentException("Airport string cannot by empty or null");
+        }
         this.arrivalAirport = arrivalAirport;
     }
     public void setDate(LocalDate date) {

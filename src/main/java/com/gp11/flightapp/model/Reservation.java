@@ -19,12 +19,18 @@ public class Reservation {
     }
 
     public Reservation(String id, User user, Flight flight) {
+        if (user == null || flight == null) {
+            throw new IllegalArgumentException("Object arguments must not be null.");
+        }
         this.id = id;
         this.userId = user.getId();
         this.flightId = flight.getId();
     }
 
     public Reservation(User user, Flight flight) {
+        if (user == null || flight == null) {
+            throw new IllegalArgumentException("Object arguments must not be null.");
+        }
         this.id = null;
         this.userId = user.getId();
         this.flightId = flight.getId();
@@ -37,12 +43,18 @@ public class Reservation {
         this.userId = userId;
     }
     public void setUserId(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User argument cannot be null.");
+        }
         this.userId = user.getId();
     }
     public void setFlightId(String flightId) {
         this.flightId = flightId;
     }
     public void setFlightId(Flight flight) {
+        if (flight == null) {
+            throw new IllegalArgumentException("Flight argument cannot be null.");
+        }
         this.flightId = flight.getId();
     }
     public String getId() {
