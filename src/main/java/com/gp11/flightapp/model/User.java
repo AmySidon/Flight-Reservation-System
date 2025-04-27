@@ -6,9 +6,7 @@ public class User {
     private String name;
     private String email;
 
-    public User() {
-
-    }
+    public User() {}
 
     public User(String id, String name, String email) {
         this.id = id;
@@ -29,9 +27,15 @@ public class User {
         return id;
     }
     public String getName() {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be empty or blank.");
+        }
         return name;
     }
     public void setEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty or blank.");
+        }
         this.email = email; //business rule: cannot be empty string,
         //also maybe other checks for validity 
     }
