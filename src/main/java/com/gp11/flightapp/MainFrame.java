@@ -111,9 +111,67 @@ public class MainFrame extends JFrame {
 
         addFlightButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(MainFrame.this, "Add Flight button clicked!");
+                try {
+                    // Get Departure Airport
+                    String departureAirport = JOptionPane.showInputDialog(MainFrame.this, "Enter Departure Airport:");
+                    if (departureAirport == null || departureAirport.trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(MainFrame.this, "Departure Airport is required.");
+                        return;
+                    }
+        
+                    // Get Arrival Airport
+                    String arrivalAirport = JOptionPane.showInputDialog(MainFrame.this, "Enter Arrival Airport:");
+                    if (arrivalAirport == null || arrivalAirport.trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(MainFrame.this, "Arrival Airport is required.");
+                        return;
+                    }
+        
+                    // Get Flight Date (with year, month, day spinners)
+                    SpinnerNumberModel yearModel = new SpinnerNumberModel(2025, 2024, 2100, 1);
+                    SpinnerNumberModel monthModel = new SpinnerNumberModel(1, 1, 12, 1);
+                    SpinnerNumberModel dayModel = new SpinnerNumberModel(1, 1, 31, 1);
+        
+                    JSpinner yearSpinner = new JSpinner(yearModel);
+                    JSpinner monthSpinner = new JSpinner(monthModel);
+                    JSpinner daySpinner = new JSpinner(dayModel);
+        
+                    JPanel datePanel = new JPanel();
+                    datePanel.add(new JLabel("Year:"));
+                    datePanel.add(yearSpinner);
+                    datePanel.add(new JLabel("Month:"));
+                    datePanel.add(monthSpinner);
+                    datePanel.add(new JLabel("Day:"));
+                    datePanel.add(daySpinner);
+        
+                    int result = JOptionPane.showConfirmDialog(MainFrame.this, datePanel, 
+                        "Enter Flight Date", JOptionPane.OK_CANCEL_OPTION);
+        
+                    if (result != JOptionPane.OK_OPTION) {
+                        JOptionPane.showMessageDialog(MainFrame.this, "Flight date is required.");
+                        return;
+                    }
+        
+                    int year = (Integer) yearSpinner.getValue();
+                    int month = (Integer) monthSpinner.getValue();
+                    int day = (Integer) daySpinner.getValue();
+        
+                    java.time.LocalDate flightDate = java.time.LocalDate.of(year, month, day);
+        
+                    // Create new Flight object
+                    com.gp11.flightapp.model.Flight newFlight = new com.gp11.flightapp.model.Flight(departureAirport, arrivalAirport, flightDate);
+        
+                    // Save to database
+                    bookingService.scheduleFlight(newFlight);
+        
+                    JOptionPane.showMessageDialog(MainFrame.this, "✅ Flight added successfully!");
+                    System.out.println("✅ Added flight: " + departureAirport + " to " + arrivalAirport + " on " + flightDate);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(MainFrame.this, "Error adding flight: " + ex.getMessage());
+                    System.out.println("Error: " + ex.getMessage());
+                }
             }
         });
+        
 
         loginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
