@@ -17,13 +17,13 @@ public class MainFrame extends JFrame {
     private JLabel userLabel;
 
     public MainFrame() {
-        //Connect to MongoDB
+        // Connect to MongoDB
         bookingService = new BookingService(MongoUtil.getDatabase());
 
         // Start logged out
         currentUser = null;
 
-        //Set up the main frame
+        // Set up the main frame
         setTitle("Flight Reservation System");
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -53,8 +53,8 @@ public class MainFrame extends JFrame {
         setLayout(new BorderLayout());
         add(userLabel, BorderLayout.NORTH);
 
-        //Panel to hold the buttons
-        
+        // Panel to hold the buttons
+
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(3, 2, 10, 10)); // rows, columns, hgap, vgap
 
@@ -83,7 +83,6 @@ public class MainFrame extends JFrame {
             }
         });
 
-
         addUserButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -107,7 +106,7 @@ public class MainFrame extends JFrame {
                     System.out.println("Error adding user: " + ex.getMessage());
                 }
             }
-        });        
+        });
 
         addFlightButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -118,23 +117,23 @@ public class MainFrame extends JFrame {
                         JOptionPane.showMessageDialog(MainFrame.this, "Departure Airport is required.");
                         return;
                     }
-        
+
                     // Get Arrival Airport
                     String arrivalAirport = JOptionPane.showInputDialog(MainFrame.this, "Enter Arrival Airport:");
                     if (arrivalAirport == null || arrivalAirport.trim().isEmpty()) {
                         JOptionPane.showMessageDialog(MainFrame.this, "Arrival Airport is required.");
                         return;
                     }
-        
+
                     // Get Flight Date (with year, month, day spinners)
                     SpinnerNumberModel yearModel = new SpinnerNumberModel(2025, 2024, 2100, 1);
                     SpinnerNumberModel monthModel = new SpinnerNumberModel(1, 1, 12, 1);
                     SpinnerNumberModel dayModel = new SpinnerNumberModel(1, 1, 31, 1);
-        
+
                     JSpinner yearSpinner = new JSpinner(yearModel);
                     JSpinner monthSpinner = new JSpinner(monthModel);
                     JSpinner daySpinner = new JSpinner(dayModel);
-        
+
                     JPanel datePanel = new JPanel();
                     datePanel.add(new JLabel("Year:"));
                     datePanel.add(yearSpinner);
@@ -142,48 +141,50 @@ public class MainFrame extends JFrame {
                     datePanel.add(monthSpinner);
                     datePanel.add(new JLabel("Day:"));
                     datePanel.add(daySpinner);
-        
-                    int result = JOptionPane.showConfirmDialog(MainFrame.this, datePanel, 
-                        "Enter Flight Date", JOptionPane.OK_CANCEL_OPTION);
-        
+
+                    int result = JOptionPane.showConfirmDialog(MainFrame.this, datePanel,
+                            "Enter Flight Date", JOptionPane.OK_CANCEL_OPTION);
+
                     if (result != JOptionPane.OK_OPTION) {
                         JOptionPane.showMessageDialog(MainFrame.this, "Flight date is required.");
                         return;
                     }
-        
+
                     int year = (Integer) yearSpinner.getValue();
                     int month = (Integer) monthSpinner.getValue();
                     int day = (Integer) daySpinner.getValue();
-        
+
                     java.time.LocalDate flightDate = java.time.LocalDate.of(year, month, day);
-        
+
                     // Create new Flight object
-                    com.gp11.flightapp.model.Flight newFlight = new com.gp11.flightapp.model.Flight(departureAirport, arrivalAirport, flightDate);
-        
+                    com.gp11.flightapp.model.Flight newFlight = new com.gp11.flightapp.model.Flight(departureAirport,
+                            arrivalAirport, flightDate);
+
                     // Save to database
                     bookingService.scheduleFlight(newFlight);
-        
+
                     JOptionPane.showMessageDialog(MainFrame.this, "✅ Flight added successfully!");
-                    System.out.println("✅ Added flight: " + departureAirport + " to " + arrivalAirport + " on " + flightDate);
+                    System.out.println(
+                            "✅ Added flight: " + departureAirport + " to " + arrivalAirport + " on " + flightDate);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(MainFrame.this, "Error adding flight: " + ex.getMessage());
                     System.out.println("Error: " + ex.getMessage());
                 }
             }
         });
-        
 
         loginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    String email= JOptionPane.showInputDialog(MainFrame.this, "Enter your email to log in:");
+                    String email = JOptionPane.showInputDialog(MainFrame.this, "Enter your email to log in:");
 
                     if (email != null && !email.trim().isEmpty()) {
                         User user = bookingService.searchUserEmail(email.trim());
                         if (user != null) {
                             currentUser = user;
                             userLabel.setText("Logged in as " + currentUser.getName());
-                            JOptionPane.showMessageDialog(MainFrame.this, "Logged in successfully! Welcome back, " + currentUser.getName() + "!");
+                            JOptionPane.showMessageDialog(MainFrame.this,
+                                    "Logged in successfully! Welcome back, " + currentUser.getName() + "!");
                             System.out.println("Logged in as " + currentUser.getName());
                         } else {
                             JOptionPane.showMessageDialog(MainFrame.this, "No user found with that email.");
@@ -202,17 +203,54 @@ public class MainFrame extends JFrame {
                 try {
                     List<Flight> flights = bookingService.getAllFlights();
                     displayFlights(flights);
-                } catch (Exception ex){
+                } catch (Exception ex) {
                     JOptionPane.showMessageDialog(MainFrame.this, "Error fetching flights: " + ex.getMessage());
                 }
             }
         });
-        
+
         viewReservationsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(MainFrame.this, "View Reservations button clicked!");
+                if (currentUser == null) {
+                    JOptionPane.showMessageDialog(MainFrame.this, "You must be logged in to view reservations.");
+                    return;
+                }
+                try {
+                    List<Reservation> reservations = bookingService.findReservationsByUserId(currentUser.getId());
+                    if (reservations.isEmpty()) {
+                        JOptionPane.showMessageDialog(MainFrame.this, "You have no reservations.");
+                        return;
+                    }
+
+                    DefaultListModel<String> listModel = new DefaultListModel<>();
+                    for (Reservation reservation : reservations) {
+                        Flight flight = bookingService.readFlight(reservation.getFlightId());
+                        if (flight != null) {
+                            listModel.addElement("Reservation ID: " + reservation.getId() +
+                                    " | " + flight.getDepartureAirport() + " → " + flight.getArrivalAirport() +
+                                    " on " + flight.getDate());
+                        } else {
+                            listModel.addElement("Reservation ID: " + reservation.getId() + " | Flight not found");
+                        }
+                    }
+
+                    JList<String> reservationList = new JList<>(listModel);
+                    reservationList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+                    JScrollPane scrollPane = new JScrollPane(reservationList);
+
+                    JFrame reservationFrame = new JFrame("My Reservations");
+                    reservationFrame.setSize(400, 300);
+                    reservationFrame.setLocationRelativeTo(MainFrame.this);
+
+                    reservationFrame.add(scrollPane);
+                    reservationFrame.setVisible(true);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(MainFrame.this, "Error retrieving reservations: " + ex.getMessage());
+                }
             }
         });
+
         searchFlightsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -221,13 +259,14 @@ public class MainFrame extends JFrame {
                     LocalDate startDate = getDateFromUser("Enter beginning date");
                     LocalDate endDate = getDateFromUser("Enter end date");
                     if (origin != null && destination != null && startDate != null && endDate != null) {
-                        List<Flight> flights = bookingService.searchFlights(startDate, endDate, origin.trim(), destination.trim());
+                        List<Flight> flights = bookingService.searchFlights(startDate, endDate, origin.trim(),
+                                destination.trim());
                         displayFlights(flights);
                     } else {
                         JOptionPane.showMessageDialog(MainFrame.this, "Search cancelled.");
                     }
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(MainFrame.this, "Error searching flights: " + ex.getMessage()); 
+                    JOptionPane.showMessageDialog(MainFrame.this, "Error searching flights: " + ex.getMessage());
                 }
             }
         });
@@ -273,7 +312,7 @@ public class MainFrame extends JFrame {
 
         int option = JOptionPane.showConfirmDialog(this, panel, "Edit User", JOptionPane.OK_CANCEL_OPTION);
 
-        if(option == JOptionPane.OK_OPTION) {
+        if (option == JOptionPane.OK_OPTION) {
             String newName = nameField.getText().trim();
             String newEmail = emailField.getText().trim();
 
@@ -288,7 +327,7 @@ public class MainFrame extends JFrame {
                 currentUser = newUser;
                 userLabel.setText("Logged in as: " + currentUser.getName());
                 JOptionPane.showMessageDialog(this, "User updated successfully.");
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error " + ex.getMessage());
             }
         }
@@ -301,7 +340,7 @@ public class MainFrame extends JFrame {
         }
 
         JFrame flightFrame = new JFrame("Available Flights");
-        flightFrame.setSize(300,400);
+        flightFrame.setSize(300, 400);
         flightFrame.setLocationRelativeTo(this);
 
         DefaultListModel<Flight> listModel = new DefaultListModel<>();
@@ -354,9 +393,12 @@ public class MainFrame extends JFrame {
         JComboBox<Integer> monthBox = new JComboBox<>();
         JComboBox<Integer> dayBox = new JComboBox<>();
 
-        for (int y = 2025; y<= 2030; y++) yearBox.addItem(y);
-        for (int m = 1; m <= 12; m++) monthBox.addItem(m);
-        for (int d = 1; d <= 31; d++) dayBox.addItem(d);
+        for (int y = 2025; y <= 2030; y++)
+            yearBox.addItem(y);
+        for (int m = 1; m <= 12; m++)
+            monthBox.addItem(m);
+        for (int d = 1; d <= 31; d++)
+            dayBox.addItem(d);
 
         JPanel panel = new JPanel();
         panel.add(new JLabel("Year:"));
@@ -374,7 +416,8 @@ public class MainFrame extends JFrame {
             try {
                 return LocalDate.of(year, month, day);
             } catch (DateTimeException e) {
-                JOptionPane.showMessageDialog(MainFrame.this, "Invalid date selected. Please try again.","Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(MainFrame.this, "Invalid date selected. Please try again.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         } else {
