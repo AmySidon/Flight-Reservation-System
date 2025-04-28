@@ -36,7 +36,10 @@ public class FlightDAOimpl implements FlightDAO {
     @Override
     public Flight read(String id) {
         Document doc = flightCollection.find(eq("_id", new ObjectId(id))).first();
-        if (doc == null) return null;
+        if (doc == null) {
+            System.out.println("No such document!");
+            return null;
+        }
         Date flightDate = doc.getDate("date");
         LocalDate localFlightDate = flightDate.toInstant()
             .atZone(ZoneId.systemDefault())

@@ -14,6 +14,11 @@ public class User {
      * Initializes a usre with no attributes.
      */
     public User() {}
+    public User(String id) {
+        this.id = id;
+        this.name = null;
+        this.email = null;
+    }
     /**
      * Constructor with strings as arguments.
      * @param id The unique identifier for the user.
@@ -94,6 +99,9 @@ public class User {
      */
     @Override
     public String toString() {
+        if (name == null || email == null) {
+            return "NULL OBJECT";
+        }
         return "Name: " + name + ", Email: " + email;
     }
     
