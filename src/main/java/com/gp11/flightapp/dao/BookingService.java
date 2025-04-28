@@ -122,19 +122,42 @@ public class BookingService {
     // Takes the ID of a reservation as a string and returns the resrvation object from
     // the database.
     public Reservation findReservation(String id) {
-        return reservationDAO.read(id);
+        Reservation reservation = reservationDAO.read(id);
+        reservation.setUser(userDAO.read(reservation.getUserId()));
+        reservation.setFlight(flightDAO.read(reservation.getFlightId()));
+        return reservation;
     }
     // Takes the ID of a user and returns all associated reservations in a list.
     public List<Reservation> findReservationsByUserId(String id) {
-        return reservationDAO.readByUserId(id);
+        List<Reservation> reservations = reservationDAO.readByUserId(id);
+        for (Reservation reservation : reservations) {
+            reservation.setUser(userDAO.read(id));
+            reservation.setFlight(flightDAO.read(reservation.getFlightId()));
+        }
+        return reservations;
     }
     // Takes the ID of a flight and returns all associated resrvations in a list.
     public List<Reservation> findReservationsByFlightId(String id) {
-        return reservationDAO.readByFlightId(id);
+        List<Reservation> reservations = reservationDAO.readByFlightId(id);
+        for (Reservation reservation : reservations) {
+            reservation.setUser(userDAO.read(reservation.getUserId()));
+            reservation.setFlight(flightDAO.read(id));
+        }
+        return reservations;
     }
     // Returns all reservations in the database in a list.
     public List<Reservation> getAllReservations() {
-        return reservationDAO.getAll();
+        List<Reservation> reservations = reservationDAO.getAll();
+        for (Reservation reservation : reservations) {
+            //System.out.println(reservation.getUserId());
+            //System.out.println(reservation.getFlightId());
+            //System.out.println(reservation.getId());
+            reservation.setUser(userDAO.read(reservation.getUserId()));
+            reservation.setFlight(flightDAO.read(reservation.getFlightId()));
+            //System.out.println(reservation.getUserId());
+            //System.out.println(reservation.getFlightId());
+        }
+        return reservations;
     }
     // Takes a reservation and updates the reservation in the database that has the
     // corresponding ID.

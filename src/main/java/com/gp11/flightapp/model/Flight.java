@@ -15,6 +15,15 @@ public class Flight {
      */
     public Flight() {}
     /**
+     * ID constructor; leaves the rest empty. For compatibility with Reservation.
+     */
+    public Flight(String id) {
+        this.id = id;
+        this.departureAirport = null;
+        this.arrivalAirport = null;
+        this.date = null;
+    }
+    /**
      * Constructs flight with given ID, departure and arrival airports, and a date.
      * @param id Flight ID.
      * @param departureAirport Departure Airport.
@@ -107,6 +116,9 @@ public class Flight {
      */
     @Override
     public String toString() {
+        if (departureAirport == null || arrivalAirport == null || date == null) {
+            return "NULL OBJECT";
+        }
         return departureAirport + " -> " + arrivalAirport + " || " + date;
     }
 }

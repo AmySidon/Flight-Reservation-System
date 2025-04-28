@@ -6,8 +6,8 @@ package com.gp11.flightapp.model;
  */
 public class Reservation {
     private String id;
-    private String userId;
-    private String flightId;
+    private Flight flight;
+    private User user;
     /**
      * Default constructor.
      * Initializes a reservation with no attributes.
@@ -21,8 +21,8 @@ public class Reservation {
      */
     public Reservation(String id, String userId, String flightId) {
         this.id = id;
-        this.userId = userId;
-        this.flightId = flightId;
+        this.user = new User(userId);
+        this.flight = new Flight(flightId);
     }
     /**
      * Creates a resrvation with string inputs; Leaves reservation ID null.
@@ -31,8 +31,8 @@ public class Reservation {
      */
     public Reservation(String userId, String flightId) {
         this.id = null;
-        this.userId = userId;
-        this.flightId = flightId;
+        this.user = new User(userId);
+        this.flight = new Flight(flightId);
     }
     /**
      * Creates a reservation with ID string and user and flight objects.
@@ -45,8 +45,8 @@ public class Reservation {
             throw new IllegalArgumentException("Object arguments must not be null.");
         }
         this.id = id;
-        this.userId = user.getId();
-        this.flightId = flight.getId();
+        this.user = user;
+        this.flight = flight;
     }
     /**
      * Creates a reservation using user and flight objects. ID is left null.
@@ -58,8 +58,8 @@ public class Reservation {
             throw new IllegalArgumentException("Object arguments must not be null.");
         }
         this.id = null;
-        this.userId = user.getId();
-        this.flightId = flight.getId();
+        this.user = user;
+        this.flight = flight;
     }
     /**
      * Sets reservation ID.
@@ -73,7 +73,7 @@ public class Reservation {
      * @param userId User ID.
      */
     public void setUserId(String userId) {
-        this.userId = userId;
+        user.setId(userId);
     }
     /**
      * Sets User ID using user object.
@@ -84,14 +84,14 @@ public class Reservation {
         if (user == null) {
             throw new IllegalArgumentException("User argument cannot be null.");
         }
-        this.userId = user.getId();
+        this.user = user;
     }
     /**
      * Set Flight ID.
      * @param flightId Flight ID.
      */
     public void setFlightId(String flightId) {
-        this.flightId = flightId;
+        this.flight.setId(flightId);
     
     }
     /**
@@ -103,7 +103,21 @@ public class Reservation {
         if (flight == null) {
             throw new IllegalArgumentException("Flight argument cannot be null.");
         }
-        this.flightId = flight.getId();
+        this.flight = flight;
+    }
+    /**
+     * Sets user object.
+     * @param user User object.
+     */
+    public void setUser(User user) {
+        this.user = user;
+    }
+    /**
+     * Sets flight object.
+     * @param flight flight object.
+     */
+    public void setFlight(Flight flight) {
+        this.flight = flight;
     }
     /**
      * Gets ID.
@@ -117,13 +131,33 @@ public class Reservation {
      * @return User ID.
      */
     public String getUserId() {
-        return userId;
+        return user.getId();
     }
     /**
      * Gets Flight ID.
      * @return Flight ID.
      */
     public String getFlightId() {
-        return flightId;
+        return flight.getId();
+    }
+    /**
+     * Gets user object.
+     */
+    public User getUser() {
+        return user;
+    }
+    /**
+     * Gets flight object.
+     * @return
+     */
+    public Flight getFlight() {
+        return flight;
+    }
+    @Override
+    public String toString() {
+        if (flight == null || user == null) {
+            return "NULL OBJECT";
+        }
+        return user.toString() + " : " + flight.toString();
     }
 }
