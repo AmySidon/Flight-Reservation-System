@@ -1,12 +1,15 @@
 package com.gp11.flightapp;
 
 import com.gp11.flightapp.dao.BookingService;
-import com.gp11.flightapp.model.User;
+import com.gp11.flightapp.model.*;
 import com.gp11.flightapp.utils.MongoUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
+import java.time.LocalDate;
+import java.time.DateTimeException;
 
 public class MainFrame extends JFrame {
     private BookingService bookingService;
@@ -66,12 +69,7 @@ public class MainFrame extends JFrame {
         // Add action listeners to buttons (empty for now)
         logOutItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (currentUser == null) {
-                    JOptionPane.showMessageDialog(MainFrame.this, "Already logged out!");
-                } else {
-                    logOut();
-                }
-
+                logOut();
             }
         });
 
@@ -144,30 +142,10 @@ public class MainFrame extends JFrame {
         viewFlightsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    // Get all flights from the database
-                    java.util.List<com.gp11.flightapp.model.Flight> flights = bookingService.getAllFlights();
-        
-                    if (flights.isEmpty()) {
-                        JOptionPane.showMessageDialog(MainFrame.this, "No flights found.");
-                    } else {
-                        // Build a string to display all flight information
-                        StringBuilder flightInfo = new StringBuilder();
-                        for (com.gp11.flightapp.model.Flight flight : flights) {
-                            flightInfo.append("Flight ID: ").append(flight.getId()).append("\n");
-                            flightInfo.append("Departure Airport: ").append(flight.getDepartureAirport()).append("\n");
-                            flightInfo.append("Arrival Airport: ").append(flight.getArrivalAirport()).append("\n");
-                            flightInfo.append("Date: ").append(flight.getDate()).append("\n\n");
-                        }
-                        // Show flights in a message dialog
-                        JTextArea textArea = new JTextArea(flightInfo.toString());
-                        textArea.setEditable(false);
-                        JScrollPane scrollPane = new JScrollPane(textArea);
-                        scrollPane.setPreferredSize(new Dimension(500, 400));
-        
-                        JOptionPane.showMessageDialog(MainFrame.this, scrollPane, "All Flights", JOptionPane.INFORMATION_MESSAGE);
-                    }} catch (Exception ex) {
+                    List<Flight> flights = bookingService.getAllFlights();
+                    displayFlights(flights);
+                } catch (Exception ex){
                     JOptionPane.showMessageDialog(MainFrame.this, "Error fetching flights: " + ex.getMessage());
-                    System.out.println("Error: " + ex.getMessage());
                 }
             }
         });
@@ -179,7 +157,20 @@ public class MainFrame extends JFrame {
         });
         searchFlightsButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(MainFrame.this, "Search Flights button clicked!");
+                try {
+                    String origin = JOptionPane.showInputDialog(MainFrame.this, "Enter departure airport:");
+                    String destination = JOptionPane.showInputDialog(MainFrame.this, "Enter arrival airport:");
+                    LocalDate startDate = getDateFromUser("Enter beginning date");
+                    LocalDate endDate = getDateFromUser("Enter end date");
+                    if (origin != null && destination != null && startDate != null && endDate != null) {
+                        List<Flight> flights = bookingService.searchFlights(startDate, endDate, origin.trim(), destination.trim());
+                        displayFlights(flights);
+                    } else {
+                        JOptionPane.showMessageDialog(MainFrame.this, "Search cancelled.");
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(MainFrame.this, "Error searching flights: " + ex.getMessage()); 
+                }
             }
         });
 
@@ -198,6 +189,10 @@ public class MainFrame extends JFrame {
     }
 
     private void logOut() {
+        if (currentUser == null) {
+            JOptionPane.showMessageDialog(this, "Arleady logged out!");
+            return;
+        }
         currentUser = null;
         userLabel.setText("Not logged in");
         JOptionPane.showMessageDialog(this, "You have logged out.");
@@ -238,6 +233,94 @@ public class MainFrame extends JFrame {
             } catch(Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error " + ex.getMessage());
             }
+        }
+    }
+
+    private void displayFlights(List<Flight> flights) {
+        if (flights.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No flights available.");
+            return;
+        }
+
+        JFrame flightFrame = new JFrame("Available Flights");
+        flightFrame.setSize(300,400);
+        flightFrame.setLocationRelativeTo(this);
+
+        DefaultListModel<Flight> listModel = new DefaultListModel<>();
+        for (Flight flight : flights) {
+            listModel.addElement(flight);
+        }
+
+        JList<Flight> flightList = new JList<>(listModel);
+        flightList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JScrollPane scrollPane = new JScrollPane(flightList);
+
+        JButton bookButton = new JButton("Book Flight");
+
+        bookButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Flight selectedFlight = flightList.getSelectedValue();
+                if (selectedFlight == null) {
+                    JOptionPane.showMessageDialog(flightFrame, "Please select a flight.");
+                    return;
+                }
+                if (currentUser == null) {
+                    JOptionPane.showMessageDialog(flightFrame, "You must be logged in to book a flight.");
+                    return;
+                }
+
+                try {
+                    bookingService.bookReservation(currentUser, selectedFlight);
+                    JOptionPane.showMessageDialog(flightFrame, "Flight booked!");
+                    flightFrame.dispose();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(flightFrame, "Error booking flight: " + ex.getMessage());
+                }
+            }
+        });
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(bookButton);
+
+        flightFrame.setLayout(new BorderLayout());
+        flightFrame.add(scrollPane, BorderLayout.CENTER);
+        flightFrame.add(bottomPanel, BorderLayout.SOUTH);
+
+        flightFrame.setVisible(true);
+    }
+
+    private LocalDate getDateFromUser(String prompt) {
+        JComboBox<Integer> yearBox = new JComboBox<>();
+        JComboBox<Integer> monthBox = new JComboBox<>();
+        JComboBox<Integer> dayBox = new JComboBox<>();
+
+        for (int y = 2025; y<= 2030; y++) yearBox.addItem(y);
+        for (int m = 1; m <= 12; m++) monthBox.addItem(m);
+        for (int d = 1; d <= 31; d++) dayBox.addItem(d);
+
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("Year:"));
+        panel.add(yearBox);
+        panel.add(new JLabel("Month:"));
+        panel.add(monthBox);
+        panel.add(new JLabel("Day:"));
+        panel.add(dayBox);
+
+        int result = JOptionPane.showConfirmDialog(MainFrame.this, panel, prompt, JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            int year = (Integer) yearBox.getSelectedItem();
+            int month = (Integer) monthBox.getSelectedItem();
+            int day = (Integer) dayBox.getSelectedItem();
+            try {
+                return LocalDate.of(year, month, day);
+            } catch (DateTimeException e) {
+                JOptionPane.showMessageDialog(MainFrame.this, "Invalid date selected. Please try again.","Error", JOptionPane.ERROR_MESSAGE);
+                return null;
+            }
+        } else {
+            return null;
         }
     }
 
